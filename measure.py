@@ -4,7 +4,9 @@
 @File ：measure.py
 @Date ：9/15/21 11:30 AM 
 """
-import os
+import re
+import pathlib
+
 import numpy as np
 import cv2
 import const
@@ -16,16 +18,9 @@ def load_measurement(file_dir):
     :param file_dir: 每帧观测分别对应一个txt文件，每个文件中多个目标观测逐行写入
     :return: 所有观测list，[[帧1所有观测],[帧2所有观测]]
     """
-    mea_list = []
-    for index in range(len(os.listdir(file_dir))):
-        mea_frame_list = []
-        file_path = os.path.join(file_dir, "testvideo1_{}.txt".format(index + 1))
-        with open(file_path, "r") as f:
-            for _, mea in enumerate(f.readlines()):
-                mea = mea.replace('\n', "").split(" ")
-                mea_frame_list.append(np.array(mea[1:5], dtype="int"))  # tl_x, tl_y, br_x, br_y
-        mea_list.append(mea_frame_list)
-    return mea_list
+    files = pathlib.Path(file_dir).rglob("testvideo1_*.txt")
+    files = sorted(files, key=lambda x: int(re.findall("testvideo1_(.*?).txt", str(x))[0]))
+    return [list(np.loadtxt(str(file), int, usecols=[1, 2, 3, 4])) for index, file in enumerate(files)]
 
 
 if __name__ == "__main__":
